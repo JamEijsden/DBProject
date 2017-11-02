@@ -1,0 +1,14 @@
+package exjobb.cache.mongo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+
+@SpringBootApplication
+@EnableMongoRepositories(basePackages = "exjobb.cache.mongo.repository")
+public class MongoApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(MongoApplication.class, args);
+	}
+}

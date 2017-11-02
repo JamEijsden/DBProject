@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script
+            src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+    <title>API</title>
+</head>
+<style>
+{
+    background: #555;
+    background-image: -webkit-linear-gradient(#555 50%, #505050 50%);
+    background-image:    -moz-linear-gradient(#555 50%, #505050 50%);
+    background-image:     -ms-linear-gradient(#555 50%, #505050 50%);
+    background-image:      -o-linear-gradient(#555 50%, #505050 50%);
+    background-image:         linear-gradient(#555 50%, #505050 50%);
+    background-position: 0 0;
+    background-repeat: repeat;
+    background-size: 4.5em 4.5em;
+
+
+}
+
+</style>
+<body>
+<div class="container">
+    <h1 style="text-align: center">API</h1>
+    <br>
+    <div class="row">
+        <form class="">
+            <div class="col-sm-8 col-sm-offset-2">
+                <div class="form-group">
+                    <label for="e-search">Regex search (with Backend Category)</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control change-responsive" id="e-search" placeholder="">
+                        <span class="input-group-btn">
+                            <button type="button" id="clear-elastic" class="btn btn-default" onclick="clearField($('#e-search'))">Clear</button>
+                       </span>
+
+                    </div>
+
+                </div>
+               <!-- <div class="form-group">
+                    <label for="reg-search">Regex search (without Backend Category)</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control change-responsive" id="reg-search" placeholder="" >
+                        <span class="input-group-btn">
+                            <button type="button" id="clear-reg" class="btn btn-default" onclick="clearField($('#reg-search'))" >Clear</button>
+                       </span>
+                        <small id="warn-alert-text" class="form-text text-muted">Query timed out</small>
+                    </div>
+                </div>-->
+                <div class="form-group" style="text-align: center; margin-bottom: 0px;">
+                        <button type="button" id="prev-page" class="btn btn-info pull-left" onclick="changePage(-1)" >Prev page</button>
+                        <span id="pages"></span>
+                        <button type="button" id="next-page" class="btn btn-info pull-right" onclick="changePage(1)"  >Next page</button>
+                </div>
+            </div>
+        </form>
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-2">
+                <small id="warn-alert" class="form-text text-muted">Query timed out</small>
+            </div>
+        </div>
+
+    </div>
+    <br>
+    <br>
+    <div style="text-align: center">
+        <div class="col-sm-4">
+            <h3 style="text-decoration: underline;">KEY</h3><br>
+            <div id="keyResult">
+
+            </div>
+        </div>
+        <div class="col-sm-8" >
+            <h3 style="text-decoration: underline;">RESULT</h3><br>
+            <div id="fullResult" style="text-align: left">
+
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
+
+
+<script>
+    var isSearching = false;
+    var latestInput = "";
+    var oldVal= "";
+    var latestRequest = "";
+    var page = 0;
+
+    $(document).ready (function(){
+        $("small").hide();
+    });
+
+    $(".change-responsive").keyup(function(e){
+
+        var input = e.currentTarget.value;
+        var target = e.currentTarget.id;
+        if(input == ""){
+            latestInput = "";
+            $("#keyResult").html("");
+            $("#fullResult").html("");
+        }
+
+        //  if(oldVal == input) {return;}
+        if(isSearching) {
+            latestInput = input;
+            return;
+        }
+        oldVal = input;
+        isSearching = true;
+        setTimeout(function(){
+            if(target == "e-search"){ likeSearch(input); }
+            else if (target == "reg-search"){textSearch(input)}
+        }
+        , 200);
+    });
+
+    function changePage(opt){
+        if(opt == -1 && page == 0){
+            console.log("wat");
+            return;
+        }
+        if(opt == -1) {
+            page--;
+        } else {
+            page++;
+        }
+        console.log("wat?")
+        $(".change-responsive").trigger( "keyup" );
+    }
+    function likeSearch(input){
+            var latestRequest = "http://localhost:8080/api/mobile/search/" + input + "?type=like&page="+page;
+            $.ajax({
+                url: latestRequest,
+                type: 'GET',
+                dataType: 'json', // added data type
+                success: function (res) {
+                    console.log(latestRequest);
+                    console.log(input);
+                    console.log(res);
+                    $("#pages").html("Page " + page);
+                    showResult(input, res);
+                    if(latestInput != "") {
+                        var tmp = latestInput;
+                        latestInput = "";
+                        likeSearch(tmp);
+                    }
+                    isSearching = false;
+                    //$("#resTitle").html("Result from " + input);
+                    //console.log(JSON.parse(res));
+                },
+                error: function (err){
+                    isSearching = false;
+                    $("#warn-alert").fadeTo(2000, 500).slideUp(500, function(){
+                        $("#warn-alert ").slideUp(500);
+                    });
+                    //console.log(JSON.parse(err));
+                }
+            });
+    }
+
+    function showResult(keyword, result){
+        var resultDiv = $("#keyResult");
+        var contentDiv = $("#fullResult");
+        resultDiv.html("");
+        contentDiv.html("");
+        var re = new RegExp(keyword, 'g');
+        $.each(result, function(k, v){
+            resultDiv.append(
+                '<div>'+
+                    '<button type="button" class="btn btn-default select-button" style="width: 100%;" data-toggle="collapse" data-target="#res'+k+'">' +
+                        v.msisdn + ":" + v.customeridentificationnumber + ":" + v.subscriptionid +
+                    '</button>' +
+                '</div><br>'
+            );
+            contentDiv.append(
+
+                    '<div id="res'+k+'" class="collapse">' +
+                        '<pre>' +
+                            JSON.stringify(v ,null,2).replace(re, '<span style="color:#5bc0de;">' + keyword + '</span>') +
+                        '</pre>'+
+                        '<br>' +
+                    '</div>'
+            );
+        });
+        $(".select-button").click( function() {
+            $(this).hasClass("btn-default") ? $(this).toggleClass('btn-info btn-default') : $(this).toggleClass('btn-default btn-info');
+        });
+    }
+
+    function clearField(e){
+        console.log(e);
+        $("#keyResult").html("");
+        $("#fullResult").html("");
+        e.val("");
+    }
+
+
+
+</script>
