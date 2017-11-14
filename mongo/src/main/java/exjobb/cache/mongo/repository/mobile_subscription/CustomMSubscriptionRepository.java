@@ -8,6 +8,5 @@ import java.util.List;
  * Created by Jimmie on 10/9/2017.
  */
 public interface CustomMSubscriptionRepository {
-    List<MSubscriptionStripped> likeSearch(String keyword, Integer page);
-    List<MSubscriptionStripped> textSearch(String keyword);
+    List<?> categorySearch(String keyword, String type, Integer page, Boolean stripped);
 }

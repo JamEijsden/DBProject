@@ -1,6 +1,5 @@
-//db.auth("jimmie","");
-var result = db.cusin_subscription.aggregate([
-    //{ $match: {subscriptionnumber: { "$regex" : /^46701123/}}},        
+
+db.cusin_subscription.aggregate([       
     { $lookup: {
     from: "customer",
     localField: "customernumber",
@@ -43,26 +42,24 @@ var result = db.cusin_subscription.aggregate([
 
     { $lookup: {
     from: "subscription_service",
-    localField: "subid_and_extrasubid",
+    localField: "subid_and_extracardsubid",
     foreignField: "subid_and_extracardsubid",
     as: "SS"
     }},
     //{$unwind: "$SS"},
-/*
+
     { $lookup: {
     from: "subscription_service_attr",
-    localField: "subid_and_extrasubid",
+    localField: "subid_and_extracardsubid",
     foreignField: "subid_and_extracardsubid",
     as: "SSA"
     }},
-   
     { $lookup: {
     from: "xtas_subscription",
     localField: "subscriptionnumber",
     foreignField: "mobilenumber",
     as: "XS"
     }},   
-*/
     { $lookup: {
     from: "cusin_subscription",
     localField: "OWNER.ownerid",
@@ -79,13 +76,13 @@ var result = db.cusin_subscription.aggregate([
     }},   
     //{$unwind: "$MS_STI"},
     
-  /*  { $lookup: {
+    { $lookup: {
     from: "serviceinformation",
     localField: "SS.servicecode",
     foreignField: "servicecodeid",
     as: "SI"
     }},   
-    *///{ $match: {"extracardsubscriptionid": "$SS.extracardsubscriptionid"} },   
+    //{ $match: {"extracardsubscriptionid": "$SS.extracardsubscriptionid"} },   
     { 
         $project: {
             subscriptionid: 1,
@@ -138,7 +135,8 @@ var result = db.cusin_subscription.aggregate([
             bg_city: "$BILLGRP.address.city",
             bg_zipcode: "$BILLGRP.address.zipcode",
             customertype: "$CUSTOMER.customertype",
-            customeridentificationnumber: "$CUSTOMER.customeridentificationnumber",
+            customeridentificationnumber: "$CUSTOMER.customeridentificationnumber",
+            cin_type : {$concat: ["$CUSTOMER.customeridentificationnumber", ":", "$CUSTOMER.customertype"]},
             cus_name1: "$CUSTOMER.address.name",
             cus_name2: "$CUSTOMER.address.name2",
             cus_name3: "$CUSTOMER.address.name3",
@@ -157,6 +155,8 @@ var result = db.cusin_subscription.aggregate([
             multisubscriptiontypecategory: { $arrayElemAt: ["$MS.subscriptiontypecategory", 0] },
             multisubscriptiontypedescr: { $arrayElemAt: ["$MS_STI.invoicetext", 0] }
         }        
-    }
-    //{ $out : "msub_test" }
-]);
+    }
+    // { $out : "mobile_subscription" }
+]).forEach(function(sub){
+    db.mobile_subscription.insert(sub);
+});

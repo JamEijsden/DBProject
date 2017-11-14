@@ -2,98 +2,163 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <script
-            src="https://code.jquery.com/jquery-3.2.1.min.js"
-            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-            crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 
     <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
 
-    <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
 
     <!-- Latest compiled and minified JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
 
     <title>API</title>
 </head>
 <style>
-{
-    background: #555;
-    background-image: -webkit-linear-gradient(#555 50%, #505050 50%);
-    background-image:    -moz-linear-gradient(#555 50%, #505050 50%);
-    background-image:     -ms-linear-gradient(#555 50%, #505050 50%);
-    background-image:      -o-linear-gradient(#555 50%, #505050 50%);
-    background-image:         linear-gradient(#555 50%, #505050 50%);
-    background-position: 0 0;
-    background-repeat: repeat;
-    background-size: 4.5em 4.5em;
+    .btn-group {
+        height: 100%;
+    }
 
+    .input-group {
+        height: 100%;
+    }
+    {
+        background: #555;
+        background-image: -webkit-linear-gradient(#555 50%, #505050 50%);
+        background-image:    -moz-linear-gradient(#555 50%, #505050 50%);
+        background-image:     -ms-linear-gradient(#555 50%, #505050 50%);
+        background-image:      -o-linear-gradient(#555 50%, #505050 50%);
+        background-image:         linear-gradient(#555 50%, #505050 50%);
+        background-position: 0 0;
+        background-repeat: repeat;
+        background-size: 4.5em 4.5em;
 
-}
+    }
+
+    .svgContainer {
+        z-index: 1000;
+        position:absolute;
+    }
 
 </style>
 <body>
 <div class="container">
     <h1 style="text-align: center">API</h1>
     <br>
-    <div class="row">
-        <form class="">
-            <div class="col-sm-8 col-sm-offset-2">
-                <div class="form-group">
-                    <label for="e-search">Regex search (with Backend Category)</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control change-responsive" id="e-search" placeholder="">
-                        <span class="input-group-btn">
-                            <button type="button" id="clear-elastic" class="btn btn-default" onclick="clearField($('#e-search'))">Clear</button>
-                       </span>
+
+        <div class="col-12 justify-content-md-center">
+            <form>
+                <div class="col-10 offset-md-1">
+
+                    <label for="cat-search">Search</label>
+                    <div class="form-group" id="cat-search">
+                        <div class="input-group">
+                            <input type="text" class="form-control change-responsive" id="search-field" aria-describedby="searchFieldAddon"  placeholder="">
+
+                            <span class="input-group-btn">
+                                <button type="button" id="clear-elastic" class="btn btn-outline-info" onclick="clearField($('#search-field'))">Clear</button>
+                           </span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <label for="search-buttons">Data</label>
+                            <div class="form-group"  id="search-buttons">
+                                <div class="btn-group" data-toggle="buttons" role="group" aria-label="Type group">
+                                    <label class="btn btn-outline-info active" data-toggle="tooltip" title="Search prebuilt data">
+                                        <input value="cat" type="radio" name="SEARCH" checked="checked">
+                                        Category
+                                    </label>
+                                    <label class="btn btn-outline-info" data-toggle="tooltip" title="Search realtime aggregated data">
+                                        <input type="radio" value="agg" name="SEARCH">
+                                        Raw Data
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label for="result-format">Result</label>
+                            <div class="form-group" id="result-format">
+                                <div class="btn-group" data-toggle="buttons" role="group" aria-label="Type group">
+                                    <label class="TYPE btn btn-outline-info active"><input value="stripped" type="radio" name="RESULT" checked="checked">Stripped</label>
+                                    <label class="TYPE btn btn-outline-info"><input type="radio" value="full" name="RESULT">Full</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col" id="agg-opt" style="display: none;">
+                            <label for="keys">Keys</label>
+                            <div class="form-group" id="keys">
+                                <div class="btn-group"  data-toggle="buttons" role="group" aria-label="Type group">
+                                    <label class="btn btn-outline-info active">
+                                        <input value="msisdn" type="radio" name="KEY" checked="checked">
+                                        Msisdn
+                                    </label>
+                                    <label class="btn btn-outline-info">
+                                        <input type="radio" value="subscriptionid" name="KEY">
+                                        Sub Id
+                                    </label>
+                                    <label class="btn btn-outline-info">
+                                        <input type="radio" value="customeridentificatonnumber" name="KEY">
+                                        Customer Ident.
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
 
                     </div>
-
-                </div>
-               <!-- <div class="form-group">
-                    <label for="reg-search">Regex search (without Backend Category)</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control change-responsive" id="reg-search" placeholder="" >
-                        <span class="input-group-btn">
-                            <button type="button" id="clear-reg" class="btn btn-default" onclick="clearField($('#reg-search'))" >Clear</button>
-                       </span>
-                        <small id="warn-alert-text" class="form-text text-muted">Query timed out</small>
+                    <div class="row">
+                        <div class="col">
+                        <label for="type-buttons">Filter</label>
+                            <div class="form-group" id="type-buttons">
+                                <div class="btn-group" data-toggle="buttons" role="group" aria-label="Type group">
+                                    <label class="TYPE btn btn-outline-info active"><input value="like" type="radio" name="TYPE" checked="checked">Like</label>
+                                    <label class="TYPE btn btn-outline-info"><input type="radio" value="equals" name="TYPE">Equals</label>
+                                    <label class="TYPE btn btn-outline-info"><input type="radio" value="gt" name="TYPE">GT</label>
+                                    <label class="TYPE btn btn-outline-info"><input type="radio" value="gte" name="TYPE">GTE</label>
+                                    <label class="TYPE btn btn-outline-info"><input type="radio" value="lt" name="TYPE">LT</label>
+                                    <label class="TYPE btn btn-outline-info"><input type="radio" value="lte" name="TYPE">LTE</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label for="pagination">Pagination</label>
+                            <div class="form-group" id="pagination">
+                                <div class="btn-group" role="group" aria-label="Nav group">
+                                    <button type="button" id="prev-page" class="btn btn-outline-info" onclick="changePage(-1)" >Prev page</button>
+                                    <button class="btn btn-outline-info" id="pages" disabled> 0 </button>
+                                    <button type="button" id="next-page" class="btn btn-outline-info" onclick="changePage(1)"  >Next page</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>-->
-                <div class="form-group" style="text-align: center; margin-bottom: 0px;">
-                        <button type="button" id="prev-page" class="btn btn-info pull-left" onclick="changePage(-1)" >Prev page</button>
-                        <span id="pages"></span>
-                        <button type="button" id="next-page" class="btn btn-info pull-right" onclick="changePage(1)"  >Next page</button>
                 </div>
-            </div>
-        </form>
-        <div class="row">
-            <div class="col-sm-8 col-sm-offset-2">
+            </form>
+        </div>
+
+        <!--<div class="row">
+            <div class="col-8 col-offset-2">
                 <small id="warn-alert" class="form-text text-muted">Query timed out</small>
             </div>
-        </div>
-
-    </div>
+        </div>-->
     <br>
     <br>
-    <div style="text-align: center">
-        <div class="col-sm-4">
-            <h3 style="text-decoration: underline;">KEY</h3><br>
-            <div id="keyResult">
-
-            </div>
-        </div>
-        <div class="col-sm-8" >
-            <h3 style="text-decoration: underline;">RESULT</h3><br>
-            <div id="fullResult" style="text-align: left">
-
-            </div>
-        </div>
+    <div class="row justify-content-md-center" >
+        <h4 ><code id="query"></code></h4><br>
     </div>
+    <div class="row justify-content-md-center" style="text-align: center" id="result">
+            <div class="col-4">
+                <h3 style="text-decoration: underline;">RESULT</h3><br>
+                <div id="keyResult">
 
+                </div>
+            </div>
+            <div class="col-8" >
+                <h3 style="text-decoration: underline;">JSON</h3><br>
+                <div id="fullResult" class="offset-md-2" style="text-align: left">
+
+                </div>
+            </div>
+    </div>
 </div>
 </body>
 </html>
@@ -102,12 +167,64 @@
 <script>
     var isSearching = false;
     var latestInput = "";
+    var search = "cat";
+    var key =  "msisdn";
+    var searchType = "like";
+    var resultForm = "stripped"
     var oldVal= "";
-    var latestRequest = "";
+    var oldTrigger;
     var page = 0;
+
+    function printSearch(){
+        var s = "";
+        s += search == "cat" ? "category " : "raw data ";
+        s += "- " + searchType + " ";
+        $("#query").html(s);
+    }
+
+
+    $("input[name='TYPE']").change(function(e){
+        searchType = this.value;
+        $(".change-responsive").trigger( "keyup" );
+    });
+
+    $("input[name='RESULT']").change(function(e){
+        resultForm = this.value;
+        $(".change-responsive").trigger( "keyup" );
+    });
+
+    $("input[name='SEARCH']").change(function(e){
+        search = this.value;
+        if(search == "agg") {
+            $("#agg-opt").show();
+        } else {
+            $("#agg-opt").hide();
+        }
+    });
+
+    $("input[name='KEY']").change(function(e){
+        key = this.value;
+        $(".change-responsive").trigger( "keyup" );
+    });
 
     $(document).ready (function(){
         $("small").hide();
+        $.fn.exists = function () {
+            return this.length !== 0;
+        };
+
+        Array.prototype.remove = function() {
+            var what, a = arguments, L = a.length, ax;
+            while (L && this.length) {
+                what = a[--L];
+                while ((ax = this.indexOf(what)) !== -1) {
+                    this.splice(ax, 1);
+                }
+            }
+            return this;
+        };
+
+        $(".change-responsive").trigger( "keyup" );
     });
 
     $(".change-responsive").keyup(function(e){
@@ -127,9 +244,10 @@
         }
         oldVal = input;
         isSearching = true;
+        oldTrigger = target;
         setTimeout(function(){
-            if(target == "e-search"){ likeSearch(input); }
-            else if (target == "reg-search"){textSearch(input)}
+            if(search == "cat"){ categorySearch(input); }
+            else if (search == "agg"){ aggSearch(input); }
         }
         , 200);
     });
@@ -147,8 +265,11 @@
         console.log("wat?")
         $(".change-responsive").trigger( "keyup" );
     }
-    function likeSearch(input){
-            var latestRequest = "http://localhost:8080/api/mobile/search/" + input + "?type=like&page="+page;
+
+    // AJAX CALLS
+    function categorySearch(input){
+            var latestRequest = "http://localhost:8080/api/mobile/search/" + input + "?type=" + searchType + "&page="+page + "&stripped="+ (resultForm == "stripped" ? true : false);
+            input = input != null ? input : oldVal;
             $.ajax({
                 url: latestRequest,
                 type: 'GET',
@@ -157,14 +278,15 @@
                     console.log(latestRequest);
                     console.log(input);
                     console.log(res);
-                    $("#pages").html("Page " + page);
+                    $("#pages").html(page);
                     showResult(input, res);
                     if(latestInput != "") {
                         var tmp = latestInput;
                         latestInput = "";
-                        likeSearch(tmp);
+                        categorySearch(tmp);
                     }
                     isSearching = false;
+                    printSearch();
                     //$("#resTitle").html("Result from " + input);
                     //console.log(JSON.parse(res));
                 },
@@ -177,6 +299,38 @@
                 }
             });
     }
+    function aggSearch(input){
+        input = input != null ? input : oldVal;
+        var latestRequest = "http://localhost:8080/api/mobile/live/search/" + input + "?type=" + searchType + "&page="+page + "&key="+key + "&stripped="+ (resultForm == "stripped" ? true : false);
+        $.ajax({
+            url: latestRequest,
+            type: 'GET',
+            dataType: 'json', // added data type
+            success: function (res) {
+                console.log(latestRequest);
+                console.log(input);
+                console.log(res);
+                $("#pages").html(page);
+                showResult(input, res);
+                if(latestInput != "") {
+                    var tmp = latestInput;
+                    latestInput = "";
+                    aggSearch(tmp);
+                }
+                isSearching = false;
+                printSearch();
+                //$("#resTitle").html("Result from " + input);
+                //console.log(JSON.parse(res));
+            },
+            error: function (err){
+                isSearching = false;
+                $("#warn-alert").fadeTo(2000, 500).slideUp(500, function(){
+                    $("#warn-alert ").slideUp(500);
+                });
+                //console.log(JSON.parse(err));
+            }
+        });
+    }
 
     function showResult(keyword, result){
         var resultDiv = $("#keyResult");
@@ -187,8 +341,8 @@
         $.each(result, function(k, v){
             resultDiv.append(
                 '<div>'+
-                    '<button type="button" class="btn btn-default select-button" style="width: 100%;" data-toggle="collapse" data-target="#res'+k+'">' +
-                        v.msisdn + ":" + v.customeridentificationnumber + ":" + v.subscriptionid +
+                    '<button type="button" class="btn btn-outline-info select-button" style="width: 100%;" data-toggle="collapse" id="'+k+'" data-target="#res'+k+'">' +
+                        v.msisdn +
                     '</button>' +
                 '</div><br>'
             );
@@ -198,12 +352,12 @@
                         '<pre>' +
                             JSON.stringify(v ,null,2).replace(re, '<span style="color:#5bc0de;">' + keyword + '</span>') +
                         '</pre>'+
-                        '<br>' +
-                    '</div>'
+                    '</div>'+ '<br>'
             );
         });
+
         $(".select-button").click( function() {
-            $(this).hasClass("btn-default") ? $(this).toggleClass('btn-info btn-default') : $(this).toggleClass('btn-default btn-info');
+            $(this).hasClass("btn-outline-info") ? $(this).toggleClass('btn-info btn-outline-info') : $(this).toggleClass('btn-outline-info btn-info');
         });
     }
 
@@ -211,9 +365,10 @@
         console.log(e);
         $("#keyResult").html("");
         $("#fullResult").html("");
+        oldTrigger= null;
+        oldVal = "";
         e.val("");
     }
-
 
 
 </script>
