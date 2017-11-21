@@ -1,5 +1,6 @@
 
-db.cusin_subscription.aggregate([       
+db.cusin_subscription.aggregate([     
+    { $match: {subscriptionnumber: "46701"}},
     { $lookup: {
     from: "customer",
     localField: "customernumber",
@@ -39,7 +40,6 @@ db.cusin_subscription.aggregate([
     as: "BILLGRP"
     }},
     {$unwind: "$BILLGRP"},
-
     { $lookup: {
     from: "subscription_service",
     localField: "subid_and_extracardsubid",
@@ -135,7 +135,7 @@ db.cusin_subscription.aggregate([
             bg_city: "$BILLGRP.address.city",
             bg_zipcode: "$BILLGRP.address.zipcode",
             customertype: "$CUSTOMER.customertype",
-            customeridentificationnumber: "$CUSTOMER.customeridentificationnumber",
+            customeridentificationnumber: "$CUSTOMER.customeridentificationnumber",
             cin_type : {$concat: ["$CUSTOMER.customeridentificationnumber", ":", "$CUSTOMER.customertype"]},
             cus_name1: "$CUSTOMER.address.name",
             cus_name2: "$CUSTOMER.address.name2",
@@ -157,6 +157,4 @@ db.cusin_subscription.aggregate([
         }        
     }
     // { $out : "mobile_subscription" }
-]).forEach(function(sub){
-    db.mobile_subscription.insert(sub);
-});
+]);

@@ -1,5 +1,8 @@
 package exjobb.cache.mongo.repository.cusin_subscription;
 
+import com.mongodb.DBObject;
+import exjobb.cache.mongo.entity.KeyVal;
+import exjobb.cache.mongo.entity.SearchOptions;
 import exjobb.cache.mongo.entity.cusin.Subscription;
 import exjobb.cache.mongo.entity.mobile.MSubscriptionStripped;
 import exjobb.cache.mongo.entity.mobile.MobileSubscription;
@@ -9,12 +12,15 @@ import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by Jimmie on 10/6/2017.
  */
-@RepositoryRestResource(collectionResourceRel = "subscription", path = "subscription")
+@RepositoryRestResource(collectionResourceRel = "cusin_subscription", path = "cusin_subscription")
 public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepository {
     private final MongoOperations operations;
 
@@ -82,12 +88,17 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
                 .foreignField("subscriptiontypecode")
                 .as("SUBTYPE");
 
+        LookupOperation lookupBillGrp= LookupOperation.newLookup()
+                .from("billgrp")
+                .localField("billentityobjid")
+                .foreignField("entityobjid")
+                .as("BILLGRP");
+
         LookupOperation lookupSS = LookupOperation.newLookup()
                 .from("subscription_service")
                 .localField("subid_and_extracardsubid")
                 .foreignField("subid_and_extracardsubid")
                 .as("SS");
-
 
         LookupOperation lookupSSA = LookupOperation.newLookup()
                 .from("subscription_service_attr")
@@ -106,12 +117,6 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
                 .localField("$MS.subscriptiontype")
                 .foreignField("subscriptiontypecode")
                 .as("MS_STI");
-
-        LookupOperation lookupBillGrp= LookupOperation.newLookup()
-                .from("billgrp")
-                .localField("billentityobjid")
-                .foreignField("entityobjid")
-                .as("BILLGRP");
 
         LookupOperation lookupXS= LookupOperation.newLookup()
                 .from("xtas_subscription")
@@ -158,7 +163,7 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
                 .and("$address.addressrow3").as("sub_addressrow3")
                 .and("$address.city").as("sub_city")
                 .and("$address.zipcode").as("sub_zipcode")
-                .and("$SS.servicecode").allElementsInArrayTrue().as("servicecode")
+                //.and("$SS.servicecode").allElementsInArrayTrue().as("servicecode")
                 /*.and("$SS.servicevalue").as("servicevalue")
                 .and("$SSA.attributename").as("attributename")
                 .and("$SSA.attributevalue").as("attributevalue")
@@ -243,9 +248,9 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
                     lookupMS,
                     lookupMS_STI,
                     lookupXS,
-                    lookupSS,
-                    lookupSSA,
-                    lookupSI,
+                    //lookupSS,
+                    //lookupSSA,
+                    //lookupSI,
 
                     project,
 
@@ -266,4 +271,74 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
 
         return aggResults.getMappedResults();
     }
+
+    @Override
+    public DBObject getSubscriptions(SearchOptions opt) {
+
+
+
+
+        MatchOperation filter;
+        String key = opt.getKeys().get(0).getKey().equals("msisdn") ? "subscriptionnumber" : opt.getKeys().get(0).getKey();
+        switch (opt.getType()){
+            case "like":
+                filter = Aggregation.match(
+                        new Criteria(key)
+                                .regex("^"+opt.getKeys().get(0).getVal()));
+
+                break;
+            case "gt":
+                filter = Aggregation.match(
+                        new Criteria(key)
+                            .gt(opt.getKeys().get(0).getVal()));
+                break;
+            case "gte":
+                filter = Aggregation.match(
+                        new Criteria(key)
+                            .gte(opt.getKeys().get(0).getVal()));
+                break;
+            case "lt":
+                filter = Aggregation.match(
+                        new Criteria(key)
+                            .lt(opt.getKeys().get(0).getVal()));
+                break;
+            case "lte":
+                filter = Aggregation.match(
+                        new Criteria(key)
+                            .lte(opt.getKeys().get(0).getVal()));
+                break;
+            default:
+                filter = Aggregation.match(
+                        new Criteria(key)
+                            .is(opt.getKeys().get(0).getVal()));
+                break;
+        }
+        opt.getFields().add("subscriptionnumber");
+
+        String[] f = new String[opt.getFields().size()];
+        Fields fields = Aggregation.fields(opt.getFields().toArray(f));
+
+        ProjectionOperation project = opt.getFields().isEmpty()
+        ?
+            Aggregation.project().andExclude("_id")
+        :
+            Aggregation.project(fields).andExclude("_id");
+
+
+        SkipOperation skip = Aggregation.skip(new Long(opt.getPage()*15));
+        LimitOperation limit = Aggregation.limit(opt.getLimit());
+
+        Aggregation agg = Aggregation.newAggregation(
+            filter,
+            skip,
+            limit,
+            project
+        );
+
+        AggregationResults<?> aggResults = operations.aggregate(
+                        agg, Subscription.class, MobileSubscription.class
+        );
+        return aggResults.getRawResults();
+    }
+
 }

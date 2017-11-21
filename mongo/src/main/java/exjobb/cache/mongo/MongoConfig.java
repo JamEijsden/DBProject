@@ -1,6 +1,7 @@
 package exjobb.cache.mongo;
 
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +28,7 @@ public class MongoConfig {
     public MongoDbFactory mongoFactory() throws Exception {
         MongoCredential credential = MongoCredential.createCredential(user, dbName, password.toCharArray());
 
-        ServerAddress serverAddress = new ServerAddress("52.29.128.68:27017");
+        ServerAddress serverAddress = new ServerAddress("35.157.192.42:27017");
 
         MongoClient mongoClient = new MongoClient(serverAddress, Arrays.asList(credential));
 

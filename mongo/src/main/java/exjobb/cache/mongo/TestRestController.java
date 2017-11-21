@@ -1,5 +1,7 @@
 package exjobb.cache.mongo;
 
+import com.mongodb.DBObject;
+import exjobb.cache.mongo.entity.SearchOptions;
 import exjobb.cache.mongo.entity.mobile.MSubscriptionStripped;
 import exjobb.cache.mongo.entity.mobile.MobileSubscription;
 import exjobb.cache.mongo.repository.cusin_subscription.CSubscriptionRepository;
@@ -9,6 +11,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -56,6 +59,31 @@ class TestRestController {
             return this.mSubRepository.categorySearch("all", type, page, stripped);
         }
 
+    }
+
+    @RequestMapping(value={"mobile/live/search/"}, method = RequestMethod.POST)
+    DBObject joinAllPost(@RequestBody SearchOptions opt) {
+        System.out.println(opt.toString());
+        return this.subscriptionRepository.getSubscriptions(opt);
+
+
+    }
+
+    @RequestMapping(value={"/fields"}, method = RequestMethod.GET)
+    List<String> getFields(){
+        MobileSubscription m = new MobileSubscription();
+        Field[] fields = m.getClass().getDeclaredFields();
+
+        List<String> actualFieldNames = getFieldNames(fields);
+        return actualFieldNames;
+    }
+
+
+    private static List<String> getFieldNames(Field[] fields) {
+        List<String> fieldNames = new ArrayList<>();
+        for (Field field : fields)
+            fieldNames.add(field.getName());
+        return fieldNames;
     }
 
 }

@@ -1,5 +1,7 @@
 package exjobb.cache.mongo.repository.cusin_subscription;
 
+import com.mongodb.DBObject;
+import exjobb.cache.mongo.entity.SearchOptions;
 import exjobb.cache.mongo.entity.mobile.MSubscriptionStripped;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 
@@ -11,4 +13,5 @@ import java.util.List;
 public interface CustomCSubscriptionRepository {
 
     List<?> aggregateSubscription(String susbcriptionnumber, String key, String type, Integer page, Boolean stripped);
+    DBObject getSubscriptions(SearchOptions opt);
 }

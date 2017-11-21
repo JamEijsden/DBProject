@@ -1,45 +1,33 @@
-
-function randomString(length) { 
-        var chars = 
-"0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz"; 
-        var randomstring = ''; 
-        var string_length = length;
-        for (var i=0; i<string_length; i++) { 
-                var rnum = Math.floor(Math.random() * chars.length); 
-                randomstring += chars.substring(rnum,rnum+1); 
-        } 
-        return randomstring; 
-} 
-
-for(var i=0; i<200; i++){db.test.save({x:i, data:randomString(2)});} 
-
-db.community_member.update( 
-  		{MEMBERID:"46" + 1 + "CUST" + 1},
-		{$set: {COMMUNITYID:"COMM_ID_" + 1}}
-	)
-	
-	
-var k = 1;
-var l = 1;
-for (var i = 1; i <= 20000;){
-
- 	db.community_owner.update( 
-  		{OWNERID:"46" + i + "CUST" + l},
-		{$set: {COMMUNITYID:"COMM_ID_" + k}}
-	)					
-		
-	if(k >= 400000){
-	  k = 1;
-	}else {
-	  k++;
-	}	
-	if(l >= 20){
-	  l = 1;
-	  i++;
-	}else {
-	  l++;
-	}
-	
-}	
-
-db.community_owner.find({}).skip(150000);
+
+db.cusin_subscription.aggregate([      
+    { $match: {subscriptionnumber: /^4670/}},
+    /*{ $lookup: {
+    from: "customer",
+    localField: "customernumber",
+    foreignField: "customernumber",
+    as: "CUSTOMER"
+    }},    
+    {$unwind: "$CUSTOMER"},
+    
+    { $lookup: {
+    from: "community_member",
+    localField: "subscriptionnumber",
+    foreignField: "memberid",
+    as: "MEMBER"
+    }},
+        { $lookup: {
+    from: "community_owner",
+    localField: "MEMBER.communityid",
+    foreignField: "communityid",
+    as: "OWNER"
+    }},*/
+    
+    { $lookup: {
+        from: "subscriptiontypeinformation",
+        localField: "subscriptiontype",
+        foreignField: "subscriptiontypecode",
+        as: "SUBTYPE"
+    }},
+    //{$unwind: "$SUBTYPE"},
+    
+])
