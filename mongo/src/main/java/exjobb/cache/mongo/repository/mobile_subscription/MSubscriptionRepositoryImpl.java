@@ -15,7 +15,9 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.util.Assert;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Jimmie on 10/9/2017.
@@ -97,4 +99,6 @@ public class MSubscriptionRepositoryImpl implements CustomMSubscriptionRepositor
         return result;
 
     }
+
+
 }
