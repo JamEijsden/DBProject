@@ -21,7 +21,7 @@ public class MobileSubscription {
     private String agreementnumber;
     private String commitmentenddate;
     private String commitmentlength;
-    private String eventnumber;
+    //private String eventnumber;
     private String userid;
     private String userchangedate;
     private String changetime;
@@ -205,14 +205,14 @@ public class MobileSubscription {
         this.commitmentlength = commitmentlength;
     }
 
-    public String getEventnumber() {
+   /* public String getEventnumber() {
         return eventnumber;
     }
 
     public void setEventnumber(String eventnumber) {
         this.eventnumber = eventnumber;
     }
-
+*/
     public String getUserid() {
         return userid;
     }

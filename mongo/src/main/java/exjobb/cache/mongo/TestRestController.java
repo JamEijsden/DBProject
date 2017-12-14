@@ -49,7 +49,7 @@ class TestRestController {
     }
 
     @RequestMapping(value={"/mobile/search", "mobile/search/{keyword}"}, method = RequestMethod.GET)
-    List<?> searchAll(@PathVariable Optional<String> keyword, @RequestParam("type") String type,
+    List<?> searchCat(@PathVariable Optional<String> keyword, @RequestParam("type") String type,
                                           @RequestParam(value = "page", required = false) Integer page,
                                           @RequestParam("stripped") Boolean stripped) {
         page = page != null ? page : 0;
@@ -59,6 +59,11 @@ class TestRestController {
             return this.mSubRepository.categorySearch("all", type, page, stripped);
         }
 
+    }
+
+    @RequestMapping(value={"/mobile/search"}, method = RequestMethod.POST)
+    DBObject searchCatPOST(@RequestBody SearchOptions opt) {
+        return this.mSubRepository.categorySearchPOST(opt);
     }
 
     @RequestMapping(value={"mobile/live/search/"}, method = RequestMethod.POST)

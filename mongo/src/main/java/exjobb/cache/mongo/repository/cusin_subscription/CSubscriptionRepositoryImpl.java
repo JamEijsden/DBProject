@@ -393,7 +393,7 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
 
         ProjectionOperation project = Aggregation.project().andExclude("_id");
         if(!getAllFields) {
-            project = project.and("subscriptionnumber").as("subscriptionnumber");
+            if(!opt.getFields().contains("subscriptionnumber")) project = project.and("$subscriptionnumber").as("msisdn");
             for(String field : opt.getFields()) {
                 System.out.println(field);
                 project = project.and(this.fieldMap.get(field)).as(field);
@@ -441,7 +441,7 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
         fieldMap.put("customeridentificationnumber", "$CUSTOMER.customeridentificationnumber");
         fieldMap.put("customertype", "$CUSTOMER.customertype");
         fieldMap.put("communityowner", "$MEMBER.communityowner");
-        fieldMap.put("$subscriptionnumber", "msisdn");
+        //fieldMap.put("$subscriptionnumber", "msisdn");
         fieldMap.put("customernumber", "customernumber");
         fieldMap.put("subscriptiontype", "subscriptiontype");
         fieldMap.put("subscriptiontypecategory", "subscriptiontypecategory");
