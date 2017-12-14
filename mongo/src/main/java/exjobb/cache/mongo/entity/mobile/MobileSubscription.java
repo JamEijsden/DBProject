@@ -1,11 +1,15 @@
 package exjobb.cache.mongo.entity.mobile;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.List;
 
 /**
  * Created by Jimmie on 9/20/2017.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Document(collection = "mobile_subscription")
 public class MobileSubscription {
     @Id
@@ -116,6 +120,13 @@ public class MobileSubscription {
     private String multisubscriptiontype;
     private String multisubscriptiontypedescr;
     private String multisubscriptiontypecategory;
+
+    private List<String> servicecode;
+    private List<String> servicevalue;
+    private List<String> attributename;
+    private List<String> attributevalue;
+    private List<String> serviceinvoicetext;
+    private List<String> serviceallowance;
 
     public MobileSubscription(){
         super();
@@ -963,6 +974,63 @@ public class MobileSubscription {
 
     public void setMultisubscriptiontypecategory(String multisubscriptiontypecategory) {
         this.multisubscriptiontypecategory = multisubscriptiontypecategory;
+    }
+
+    public List<String> getServicecode() {
+        return servicecode;
+    }
+
+    public void setServicecode(List<String> servicecode) {
+        this.servicecode = servicecode;
+    }
+
+    public List<String> getServicevalue() {
+        return servicevalue;
+    }
+
+    public void setServicevalue(List<String> servicevalue) {
+        this.servicevalue = servicevalue;
+    }
+
+    public List<String> getAttributename() {
+        return attributename;
+    }
+
+    public void setAttributename(List<String> attributename) {
+        this.attributename = attributename;
+    }
+
+    public List<String> getAttributevalue() {
+        return attributevalue;
+    }
+
+    public void setAttributevalue(List<String> attributevalue) {
+        this.attributevalue = attributevalue;
+    }
+
+    public List<String> getServiceinvoicetext() {
+        return serviceinvoicetext;
+    }
+
+    public void setServiceinvoicetext(List<String> serviceinvoicetext) {
+        this.serviceinvoicetext = serviceinvoicetext;
+    }
+
+    public List<String> getServiceallowance() {
+        return serviceallowance;
+    }
+
+    public void setServiceallowance(List<String> serviceallowance) {
+        this.serviceallowance = serviceallowance;
+    }
+
+    @Override
+    public String toString() {
+        return "MobileSubscription{" +
+                "subscriptionnumber='" + subscriptionnumber + '\'' +
+                ", customernumber='" + customernumber + '\'' +
+                ", customeridentificationnumber='" + customeridentificationnumber + '\'' +
+                '}';
     }
 }
 

@@ -1,6 +1,10 @@
-
 db.cusin_subscription.aggregate([     
-    { $match: {subscriptionnumber: "46701"}},
+    {$match: 
+        { $or:[ 
+            {subscriptionnumber: "46701"},
+            {customernumber: "11"}
+        ]}
+    },
     { $lookup: {
     from: "customer",
     localField: "customernumber",

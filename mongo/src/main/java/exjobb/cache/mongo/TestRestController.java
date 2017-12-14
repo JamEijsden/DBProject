@@ -62,17 +62,22 @@ class TestRestController {
     }
 
     @RequestMapping(value={"/mobile/search"}, method = RequestMethod.POST)
-    DBObject searchCatPOST(@RequestBody SearchOptions opt) {
+    List<?> searchCatPOST(@RequestBody SearchOptions opt) {
         return this.mSubRepository.categorySearchPOST(opt);
     }
 
     @RequestMapping(value={"mobile/live/search/"}, method = RequestMethod.POST)
-    DBObject joinAllPost(@RequestBody SearchOptions opt) {
+    List<?> joinAllPost(@RequestBody SearchOptions opt, @RequestParam("stream") Boolean stream) {
         System.out.println(opt.toString());
-        return this.subscriptionRepository.getSubscriptions(opt);
+        if(!stream) {
+            return this.subscriptionRepository.getSubscriptions(opt);
+        } else {
+            return this.subscriptionRepository.getSubscriptions(opt);
+        }
 
 
     }
+
 
     @RequestMapping(value={"/fields"}, method = RequestMethod.GET)
     List<String> getFields(){

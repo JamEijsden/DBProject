@@ -8,7 +8,8 @@ import java.util.List;
  */
 public class SearchOptions {
     List<String> fields = new ArrayList();
-    List<KeyVal> keys = new ArrayList();
+    List<String> keys = new ArrayList();
+    String value = "";
     Boolean stripped = true;
     String type = "equals";
     Integer page = 0;
@@ -22,12 +23,20 @@ public class SearchOptions {
         this.fields = fields;
     }
 
-    public List<KeyVal> getKeys() {
+    public List<String> getKeys() {
         return keys;
     }
 
-    public void setKeys(List<KeyVal> keys) {
+    public void setKeys(List<String> keys) {
         this.keys = keys;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 
     public Boolean getStripped() {

@@ -111,12 +111,12 @@ public class MSubscriptionRepositoryImpl implements CustomMSubscriptionRepositor
     }
 
     @Override
-    public DBObject categorySearchPOST(SearchOptions opt){
+    public List<?> categorySearchPOST(SearchOptions opt){
 
         Query query = new Query();
 
         MatchOperation filter;
-        String keyword = opt.getKeys().get(0).getVal();
+        String keyword = opt.getValue();
 
 
         SkipOperation skip = Aggregation.skip(new Long(opt.getPage()*15));
@@ -154,7 +154,7 @@ public class MSubscriptionRepositoryImpl implements CustomMSubscriptionRepositor
                 agg, Subscription.class, MobileSubscription.class
         );
 
-        return aggResults.getRawResults();
+        return  aggResults.getMappedResults();
 
     }
 

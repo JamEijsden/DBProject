@@ -11,5 +11,5 @@ import java.util.List;
  */
 public interface CustomMSubscriptionRepository {
     List<?> categorySearch(String keyword, String type, Integer page, Boolean stripped);
-    DBObject categorySearchPOST(SearchOptions opt);
+    List<?> categorySearchPOST(SearchOptions opt);
 }

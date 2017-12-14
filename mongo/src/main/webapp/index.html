@@ -151,15 +151,15 @@ https://github.com/silviomoreto/bootstrap-select/issues/1135
                             <div class="form-group" id="keys">
                                 <div class="btn-group"  data-toggle="buttons" role="group" aria-label="Type group">
                                     <label class="btn btn-outline-info active">
-                                        <input value="msisdn" type="radio" name="KEY" checked="checked">
+                                        <input value="subscriptionnumber" type="checkbox" name="KEY" checked="checked">
                                         Msisdn
                                     </label>
                                     <label class="btn btn-outline-info">
-                                        <input type="radio" value="subscriptionid" name="KEY">
+                                        <input type="checkbox" value="subscriptionid" name="KEY">
                                         Sub Id
                                     </label>
                                     <label class="btn btn-outline-info">
-                                        <input type="radio" value="customeridentificatonnumber" name="KEY">
+                                        <input type="checkbox" value="customeridentificationnumber" name="KEY">
                                         Customer Ident.
                                     </label>
                                 </div>
@@ -229,12 +229,13 @@ https://github.com/silviomoreto/bootstrap-select/issues/1135
     var isSearching = false;
     var latestInput = "";
     var search = "cat";
-    var key =  "msisdn";
+    var keys = ["subscriptionnumber"];
     var searchType = "equals";
     var resultForm = "stripped"
     var oldVal= "";
     var oldTrigger;
     var page = 0;
+    var stream = false;
 
     function printSearch(){
         var s = "";
@@ -266,7 +267,11 @@ https://github.com/silviomoreto/bootstrap-select/issues/1135
     });
 
     $("input[name='KEY']").change(function(e){
-        key = this.value;
+        if(keys.indexOf(this.value) === -1)
+            keys.push(this.value);
+        else
+            keys.remove(this.value);
+
         $(".change-responsive").trigger( "keyup" );
     });
 
@@ -370,12 +375,8 @@ https://github.com/silviomoreto/bootstrap-select/issues/1135
         input = input != null ? input : oldVal;
         var data = {
             fields : $('.selectpicker').selectpicker('val'),
-            keys: [
-                {
-                    key: key,
-                    val: input
-                }
-            ],
+            keys: keys,
+            value: input,
             type: searchType,
             stripped: (resultForm == "stripped" ? true : false),
             page: 0,
@@ -447,18 +448,14 @@ https://github.com/silviomoreto/bootstrap-select/issues/1135
         input = input != null ? input : oldVal;
         var data = {
             fields : $('.selectpicker').selectpicker('val'),
-            keys: [
-                {
-                    key: key,
-                    val: input
-                }
-            ],
+            keys: keys,
+            value: input,
             type: searchType,
             stripped: (resultForm == "stripped" ? true : false),
             page: 0,
         };
         $.ajax({
-            url: "http://localhost:8080/api/mobile/live/search/",
+            url: "http://localhost:8080/api/mobile/live/search/?stream="+stream,
             type: 'POST',
             dataType: 'json', // added data type,
             contentType: "application/json; charset=utf-8",
@@ -513,14 +510,11 @@ https://github.com/silviomoreto/bootstrap-select/issues/1135
         contentDiv.html("");
 
         var re = new RegExp(keyword, 'g');
-        $.each(result.result, function(k, v){
-            if(!result.hasOwnProperty("msisdn")){
-                v.msisdn = v.subscriptionnumber;
-            }
+        $.each(result, function(k, v){
             resultDiv.append(
                 '<div>'+
                     '<button type="button" class="btn btn-outline-info select-button" style="width: 100%;" data-toggle="collapse" id="'+k+'" data-target="#res'+k+'">' +
-                        v.msisdn +
+                    v["customeridentificationnumber"] + ":" + v["msisdn"] +
                     '</button>' +
                 '</div><br>'
             );
