@@ -1,28 +1,19 @@
 package exjobb.cache.mongo.repository.cusin_subscription;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import exjobb.cache.mongo.entity.KeyVal;
 import exjobb.cache.mongo.entity.SearchOptions;
 import exjobb.cache.mongo.entity.cusin.Customer;
 import exjobb.cache.mongo.entity.cusin.Subscription;
 import exjobb.cache.mongo.entity.mobile.MSubscriptionStripped;
 import exjobb.cache.mongo.entity.mobile.MobileSubscription;
-import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.util.CloseableIterator;
-import org.springframework.data.util.StreamUtils;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * Created by Jimmie on 10/6/2017.
@@ -327,14 +318,18 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
             lookupOps = (!k.equals("customeridentificationnumber")) ? getSubscriptionLookupOperations() : getCustomerLookupOperations();
 
             Boolean getAllFields = opt.getFields().isEmpty();
-
-            ProjectionOperation project = (!k.equals("customeridentificationnumber")) ? getSubscriptionProjection() : getCustomerProjection();
+            ProjectionOperation project = new ProjectionOperation()
+                    .andExclude("_id")
+                    .and("subscriptionnumber").as("msisdn")
+                    .andInclude("$CUSTOMER.customeridentificationnumber");
             if(!getAllFields) {
                 //if(!opt.getFields().contains("$SUBSCRIPTION.subscriptionnumber")) project = project.and("$SUBSCRIPTION.subscriptionnumber").as("msisdn");
                 for(String field : opt.getFields()) {
                     System.out.println(field);
                     project = project.and(this.fieldMap.get(field)).as(field);
                 }
+            } else {
+                project = (!k.equals("customeridentificationnumber")) ? getSubscriptionProjection() : getCustomerProjection();
             }
 
             SkipOperation skip = Aggregation.skip(new Long(opt.getPage()*15));
@@ -444,6 +439,12 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
                 .foreignField("servicecodeid")
                 .as("SI");
 
+        LookupOperation lookupCommonCustomer = LookupOperation.newLookup()
+                .from("common_customer")
+                .localField("CUSTOMER.cin_type")
+                .foreignField("cin_pt")
+                .as("COMMON_CUSTOMER");
+
         Boolean getAllFields = opt.getFields().isEmpty();
 
 
@@ -479,6 +480,7 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
                 Aggregation.unwind("SUBTYPE"),
                 lookupBillGrp,
                 Aggregation.unwind("BILLGRP"),
+                lookupCommonCustomer,
                 lookupMS,
                 lookupMS_STI,
                 lookupXS,
@@ -507,7 +509,7 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
         System.out.println("Subscription");
         return Aggregation
                 .project()
-                .andInclude("subscriptionid", "extracardsubscriptionid")
+                .andInclude("subscriptionid", "extracardsubscriptionid", "$COMMON_CUSTOMER.tscid")
                 .and("$CUSTOMER.customeridentificationnumber").as("customeridentificationnumber")
                 .and("$CUSTOMER.customertype").as("customertype")
                 .and("$MEMBER.communityowner").arrayElementAt(0).as("communityowner")
@@ -542,8 +544,8 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
                 .and("$SS.servicevalue").as("servicevalue")
                 .and("$SSA.attributename").as("attributename")
                 .and("$SSA.attributevalue").as("attributevalue")
-                .and("$SI.invoicetext").as("invoicetext")
-                .and("$SI.allowance").as("allowance")
+                .and("$SI.invoicetext").as("serviceinvoicetext")
+                .and("$SI.allowance").as("serviceallowance")
                 .and("$XS.mobilenumber").arrayElementAt(0).as("xtas_subscriptionnumber")
                 .and("$SUBTYPE.invoicetext").as("offeringname")
                 .and("$BILLGRP.accountnumber").as("accountnumber")
@@ -583,7 +585,7 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
     return Aggregation.project()
             .and("$SUBSCRIPTION.subscriptionid").as("subscriptionid")
             .and("$SUBSCRIPTION.extracardsubscriptionid").as("extracardsubscriptionid")
-            .andInclude("customeridentificationnumber", "customertype", "customernumber")
+            .andInclude("customeridentificationnumber", "customertype", "customernumber", "$COMMON_CUSTOMER.tscid")
             .and("$MEMBER.communityowner").arrayElementAt(0).as("communityowner")
             .andExpression("\"mobilesubscription:\"").concat("$SUBSCRIPTION.subscriptionnumber").as("c2bcacheuid")
             .and("$SUBSCRIPTION.subscriptionnumber").as("msisdn")
@@ -660,6 +662,13 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
                 .as("CUSTOMER");
         lookupOps.add(lookupCustomer);
         lookupOps.add(Aggregation.unwind("CUSTOMER"));
+
+        LookupOperation lookupCommonCustomer = LookupOperation.newLookup()
+                .from("common_customer")
+                .localField("CUSTOMER.cin_type")
+                .foreignField("cin_pt")
+                .as("COMMON_CUSTOMER");
+        lookupOps.add(lookupCommonCustomer);
 
         LookupOperation lookupMember = LookupOperation.newLookup()
                 .from("community_member")
@@ -738,6 +747,13 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
     private List<AggregationOperation> getCustomerLookupOperations(){
 
         List<AggregationOperation> lookupOps = new ArrayList<>();
+
+        LookupOperation lookupCommonCustomer = LookupOperation.newLookup()
+                .from("common_customer")
+                .localField("cin_type")
+                .foreignField("cin_pt")
+                .as("COMMON_CUSTOMER");
+        lookupOps.add(lookupCommonCustomer);
 
         LookupOperation lookupSubscription = LookupOperation.newLookup()
                 .from("cusin_subscription")
@@ -846,51 +862,52 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
         fieldMap.put("billentityobjid", "billentityobjid");
         fieldMap.put("referencetextonbill", "referencetextonbill");
         fieldMap.put("agreementnumber", "agreementnumber");
-        fieldMap.put("$address.name", "sub_name1");
-        fieldMap.put("$address.name2", "sub_name2");
-        fieldMap.put("$address.name3", "sub_name3");
-        fieldMap.put("$address.addressrow1", "sub_addressrow1");
-        fieldMap.put("$address.addressrow2", "sub_addressrow2");
-        fieldMap.put("$address.addressrow3", "sub_addressrow3");
-        fieldMap.put("$address.city", "sub_city");
-        fieldMap.put("$address.zipcode", "sub_zipcode");
-        fieldMap.put("$SS.servicecode", "servicecode");
-        fieldMap.put("$SS.servicevalue", "servicevalue");
-        fieldMap.put("$SSA.attributename", "attributename");
-        fieldMap.put("$SSA.attributevalue", "attributevalue");
-        fieldMap.put("$SI.invoicetext", "invoicetext");
-        fieldMap.put("$SI.allowance", "allowance");
-        fieldMap.put("$XS.mobilenumber", "xtas_subscriptionnumber");
-        fieldMap.put("$SUBTYPE.invoicetext", "offeringname");
-        fieldMap.put("$BILLGRP.accountnumber", "accountnumber");
-        fieldMap.put("$BILLGRP.invoicedeliverymethod", "invoicedeliverymethod");
-        fieldMap.put("$BILLGRP.invoicedeliverymethoddescr", "invoicedeliverymethoddescr");
-        fieldMap.put("$BILLGRP.billgroupid", "billingroupid");
-        fieldMap.put("$BILLGRP.address.name", "bg_name1");
-        fieldMap.put("$BILLGRP.address.name2", "bg_name2");
-        fieldMap.put("$BILLGRP.address.name3", "bg_name3");
-        fieldMap.put("$BILLGRP.address.addressrow1", "bg_addressrow1");
-        fieldMap.put("$BILLGRP.address.addressrow2", "bg_addressrow2");
-        fieldMap.put("$BILLGRP.address.addressrow3", "bg_addressrow3");
-        fieldMap.put("$BILLGRP.address.city", "bg_city");
-        fieldMap.put("$BILLGRP.address.zipcode", "bg_zipcode");
-        fieldMap.put("$CUSTOMER.address.name", "cus_name1");
-        fieldMap.put("$CUSTOMER.address.name2", "cus_name2");
-        fieldMap.put("$CUSTOMER.address.name3", "cus_name3");
-        fieldMap.put("$CUSTOMER.address.addressrow1", "cus_addressrow1");
-        fieldMap.put("$CUSTOMER.address.addressrow2", "cus_addressrow2");
-        fieldMap.put("$CUSTOMER.address.addressrow3", "cus_addressrow3");
-        fieldMap.put("$CUSTOMER.address.city", "cus_city");
-        fieldMap.put("$CUSTOMER.address.zipcode", "cus_zipcode");
-        fieldMap.put("$MEMBER.communityowner", "communityowner");
-        fieldMap.put("$OWNER.ownerid", "ownerid");
+        fieldMap.put("sub_name1", "$address.name");
+        fieldMap.put("sub_name2", "$address.name2");
+        fieldMap.put("sub_name3", "$address.name3");
+        fieldMap.put("sub_addressrow1", "$address.addressrow1");
+        fieldMap.put("sub_addressrow2", "$address.addressrow2");
+        fieldMap.put("sub_addressrow3", "$address.addressrow3");
+        fieldMap.put("sub_city", "$address.city");
+        fieldMap.put("sub_zipcode", "$address.zipcode");
+        fieldMap.put("servicecode", "$SS.servicecode");
+        fieldMap.put("servicevalue", "$SS.servicevalue");
+        fieldMap.put("attributename", "$SSA.attributename");
+        fieldMap.put("attributevalue", "$SSA.attributevalue");
+        fieldMap.put("invoicetext", "$SI.invoicetext");
+        fieldMap.put("allowance", "$SI.allowance");
+        fieldMap.put("xtas_subscriptionnumber", "$XS.mobilenumber");
+        fieldMap.put("offeringname", "$SUBTYPE.invoicetext");
+        fieldMap.put("accountnumber", "$BILLGRP.accountnumber");
+        fieldMap.put("invoicedeliverymethod", "$BILLGRP.invoicedeliverymethod");
+        fieldMap.put("invoicedeliverymethoddescr", "$BILLGRP.invoicedeliverymethoddescr");
+        fieldMap.put("billingroupid", "$BILLGRP.billgroupid");
+        fieldMap.put("bg_name1", "$BILLGRP.address.name");
+        fieldMap.put("bg_name2", "$BILLGRP.address.name");
+        fieldMap.put("bg_name3", "$BILLGRP.address.name3");
+        fieldMap.put("bg_addressrow1", "$BILLGRP.address.addressrow1");
+        fieldMap.put("bg_addressrow2", "$BILLGRP.address.addressrow2");
+        fieldMap.put("bg_addressrow3", "$BILLGRP.address.addressrow3");
+        fieldMap.put("bg_city", "$BILLGRP.address.city");
+        fieldMap.put("bg_zipcode", "$BILLGRP.address.zipcode");
+        fieldMap.put("cus_name1", "$CUSTOMER.address.name");
+        fieldMap.put("cus_name2", "$CUSTOMER.address.name2");
+        fieldMap.put("cus_name3", "$CUSTOMER.address.name3");
+        fieldMap.put("cus_addressrow1", "$CUSTOMER.address.addressrow1");
+        fieldMap.put("cus_addressrow2", "$CUSTOMER.address.addressrow2");
+        fieldMap.put("cus_addressrow3", "$CUSTOMER.address.addressrow3");
+        fieldMap.put("cus_city", "$CUSTOMER.address.city");
+        fieldMap.put("cus_zipcode", "$CUSTOMER.address.zipcode");
+        fieldMap.put("communityowner", "$MEMBER.communityowner");
+        fieldMap.put("ownerid", "$OWNER.ownerid");
+        fieldMap.put("tscid", "COMMON_CUSTOMER.tscid");
         fieldMap.put("retailernumber", "retailernumber");
         fieldMap.put("supervisionlevel", "supervisionlevel");
         fieldMap.put("supervisionstatus", "supervisionstatus");
         fieldMap.put("supervisiondate", "supervisiondate");
-        fieldMap.put("$MS.subscriptiontype", "multisubscriptiontype");
-        fieldMap.put("$MS.subscriptiontypecategory", "multisubscriptiontypecategory");
-        fieldMap.put("$MS_STI.invoicetext", "multisubscriptiontypedescr");
+        fieldMap.put("multisubscriptiontype", "$MS.subscriptiontype");
+        fieldMap.put("multisubscriptiontypecategory", "$MS.subscriptiontypecategory");
+        fieldMap.put("multisubscriptiontypedescr", "$MS_STI.invoicetext");
 
         this.fieldMap = fieldMap;
     }

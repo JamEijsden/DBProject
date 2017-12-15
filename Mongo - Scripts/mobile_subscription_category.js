@@ -1,9 +1,9 @@
 db.cusin_subscription.aggregate([     
-    {$match: 
-        { $or:[ 
-            {subscriptionnumber: "46701"},
-            {customernumber: "11"}
-        ]}
+    {$match: 
+        { $or:[ 
+            {subscriptionnumber: "46701"},
+            {customernumber: "11"}
+        ]}
     },
     { $lookup: {
     from: "customer",
@@ -85,6 +85,12 @@ db.cusin_subscription.aggregate([
     localField: "SS.servicecode",
     foreignField: "servicecodeid",
     as: "SI"
+    }}, 
+    { $lookup: {
+        from: "common_customer",
+        localField: "CUSTOMER.cin_type",
+        foreignField: "ccin_pt",
+        as: "SI"
     }},   
     //{ $match: {"extracardsubscriptionid": "$SS.extracardsubscriptionid"} },   
     { 

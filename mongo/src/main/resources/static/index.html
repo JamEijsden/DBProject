@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/css/bootstrap-select.min.css">
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/js/bootstrap-select.min.js" crossorigin="anonymous"></script>
+
+    <title>API</title>
+</head>
+<style>
+    .btn-group {
+        height: 100%;
+    }
+
+    .input-group {
+        height: 100%;
+    }
+    {
+        background: #555;
+        background-image: -webkit-linear-gradient(#555 50%, #505050 50%);
+        background-image:    -moz-linear-gradient(#555 50%, #505050 50%);
+        background-image:     -ms-linear-gradient(#555 50%, #505050 50%);
+        background-image:      -o-linear-gradient(#555 50%, #505050 50%);
+        background-image:         linear-gradient(#555 50%, #505050 50%);
+        background-position: 0 0;
+        background-repeat: repeat;
+        background-size: 4.5em 4.5em;
+
+    }
+
+    .svgContainer {
+        z-index: 1000;
+        position:absolute;
+    }
+
+    /*
+Make bootstrap-select work with bootstrap 4 see:
+https://github.com/silviomoreto/bootstrap-select/issues/1135
+*/
+    .dropdown-toggle.btn-default {
+        color: #292b2c;
+        background-color: #fff;
+        border-color: #ccc;
+    }
+
+    .bootstrap-select.show>.dropdown-menu>.dropdown-menu {
+        display: block;
+    }
+
+    .bootstrap-select > .dropdown-menu > .dropdown-menu li.hidden{
+        display:none;
+    }
+
+    .bootstrap-select > .dropdown-menu > .dropdown-menu li a{
+        display: block;
+        width: 100%;
+        padding: 3px 1.5rem;
+        clear: both;
+        font-weight: 400;
+        color: #292b2c;
+        text-align: inherit;
+        white-space: nowrap;
+        background: 0 0;
+        border: 0;
+    }
+
+    .dropdown-menu > li.active > a {
+        color: #fff !important;
+        background-color: #337ab7 !important;
+    }
+
+    .bootstrap-select .check-mark::after {
+        content: "✓";
+    }
+
+    .bootstrap-select button {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+
+    /* Make filled out selects be the same size as empty selects */
+    .bootstrap-select.btn-group .dropdown-toggle .filter-option {
+        display: inline !important;
+    }
+</style>
+<body>
+<div class="container">
+    <h1 style="text-align: center">API</h1>
+    <br>
+
+        <div class="col-12 justify-content-md-center">
+            <form>
+                <div class="col-10 offset-md-1">
+
+                    <label for="cat-search">Search</label>
+                    <div class="form-group" id="cat-search">
+                        <div class="input-group">
+                            <input type="text" class="form-control change-responsive" id="search-field" aria-describedby="searchFieldAddon"  placeholder="">
+
+                            <span class="input-group-btn">
+                                <button type="button" id="clear-elastic" class="btn btn-outline-info" onclick="clearField($('#search-field'))">Clear</button>
+                           </span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <label for="fields-buttons">Result fields</label>
+                            <div class="form-group"  id="fields-buttons">
+                                <select id="select-fields" class="col-12 form-control selectpicker" multiple data-actions-box="true" data-live-search="true">
+
+
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <label for="search-buttons">Data</label>
+                            <div class="form-group"  id="search-buttons">
+                                <div class="btn-group" data-toggle="buttons" role="group" aria-label="Type group">
+                                    <label class="btn btn-outline-info active" data-toggle="tooltip" title="Search prebuilt data">
+                                        <input value="cat" type="radio" name="SEARCH" checked="checked">
+                                        Offline
+                                    </label>
+                                    <label class="btn btn-outline-info" data-toggle="tooltip" title="Search realtime aggregated data">
+                                        <input type="radio" value="agg" name="SEARCH">
+                                        Live
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label for="result-format">Result</label>
+                            <div class="form-group" id="result-format">
+                                <div class="btn-group" data-toggle="buttons" role="group" aria-label="Type group">
+                                    <label class="TYPE btn btn-outline-info active"><input value="stripped" type="radio" name="RESULT" checked="checked">Stripped</label>
+                                    <label class="TYPE btn btn-outline-info"><input type="radio" value="full" name="RESULT">Full</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col" id="agg-opt" style="display: none;">
+                            <label for="keys">Keys</label>
+                            <div class="form-group" id="keys">
+                                <div class="btn-group"  data-toggle="buttons" role="group" aria-label="Type group">
+                                    <label class="btn btn-outline-info active">
+                                        <input value="subscriptionnumber" type="checkbox" name="KEY" checked="checked">
+                                        Msisdn
+                                    </label>
+                                    <label class="btn btn-outline-info">
+                                        <input type="checkbox" value="tscid" name="KEY">
+                                        TSCID
+                                    </label>
+                                    <label class="btn btn-outline-info">
+                                        <input type="checkbox" value="customeridentificationnumber" name="KEY">
+                                        Org. Nr
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                        <label for="type-buttons">Filter</label>
+                            <div class="form-group" id="type-buttons">
+                                <div class="btn-group" data-toggle="buttons" role="group" aria-label="Type group">
+                                    <label class="TYPE btn btn-outline-info "><input value="like" type="radio" name="TYPE" >Like</label>
+                                    <label class="TYPE btn btn-outline-info active"><input type="radio" value="equals" name="TYPE" checked="checked">Equals</label>
+                                    <label class="TYPE btn btn-outline-info"><input type="radio" value="gt" name="TYPE">GT</label>
+                                    <label class="TYPE btn btn-outline-info"><input type="radio" value="gte" name="TYPE">GTE</label>
+                                    <label class="TYPE btn btn-outline-info"><input type="radio" value="lt" name="TYPE">LT</label>
+                                    <label class="TYPE btn btn-outline-info"><input type="radio" value="lte" name="TYPE">LTE</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label for="pagination">Pagination</label>
+                            <div class="form-group" id="pagination">
+                                <div class="btn-group" role="group" aria-label="Nav group">
+                                    <button type="button" id="prev-page" class="btn btn-outline-info" onclick="changePage(-1)" >Prev page</button>
+                                    <button class="btn btn-outline-info" id="pages" disabled> 0 </button>
+                                    <button type="button" id="next-page" class="btn btn-outline-info" onclick="changePage(1)"  >Next page</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!--<div class="row">
+            <div class="col-8 col-offset-2">
+                <small id="warn-alert" class="form-text text-muted">Query timed out</small>
+            </div>
+        </div>-->
+    <br>
+    <br>
+    <div class="row justify-content-md-center" >
+        <h4 ><code id="query"></code></h4><br>
+    </div>
+    <div class="row justify-content-md-center" style="text-align: center" id="result">
+            <div class="col-4">
+                <h3 style="text-decoration: underline;">RESULT</h3><br>
+                <div id="keyResult">
+
+                </div>
+            </div>
+            <div class="col-8" >
+                <h3 style="text-decoration: underline;">JSON</h3><br>
+                <div id="fullResult" class="offset-md-2" style="text-align: left">
+
+                </div>
+            </div>
+    </div>
+</div>
+</body>
+</html>
+
+
+<script src="js/init.js"></script>
+<script src="js/view/update.js"></script>
+<script src="js/events.js"></script>
+<script src="js/service/fields.js"></script>
+<script src="js/service/offline.js"></script>
+<script src="js/service/live.js"></script>
