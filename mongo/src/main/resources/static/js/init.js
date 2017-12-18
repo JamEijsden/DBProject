@@ -3,6 +3,7 @@
  */
 var isSearching = false;
 var url = "http://35.157.192.42";
+var url = "localhost";
 var latestInput = "";
 var search = "cat";
 var keys = ["subscriptionnumber"];
