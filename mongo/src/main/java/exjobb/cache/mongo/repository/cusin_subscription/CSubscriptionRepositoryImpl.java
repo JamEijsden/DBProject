@@ -21,6 +21,9 @@ import java.util.*;
 @RepositoryRestResource(collectionResourceRel = "cusin_subscription", path = "cusin_subscription")
 public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepository {
     private final MongoOperations operations;
+
+    private Map<String, ProjectionOperation> keyProject = new HashMap();
+    private Map<String, List<AggregationOperation>> keyLookup = new HashMap();
     private Map<String, String> fieldMap;
 
     @Autowired
@@ -29,6 +32,17 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
         Assert.notNull(operations, "MongoOperations must not be null!");
         this.operations = operations;
         initFieldMap();
+        initHashMaps();
+    }
+
+    private void initHashMaps(){
+        this.keyProject.put("subscriptionnumber", getSubscriptionProjection());
+        this.keyProject.put("tscid", getCommonCustomerProjection());
+        this.keyProject.put("customeridentificationnumber", getCustomerProjection());
+
+        this.keyLookup.put("subscriptionnumber", getSubscriptionLookupOperations());
+        this.keyLookup.put("tscid", getCommonCustomerLookupOperations());
+        this.keyLookup.put("customeridentificationnumber", getCustomerLookupOperations());
     }
 
     @Override
@@ -304,24 +318,26 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
         }
     }
 
+
     @Override
     public List<MobileSubscription> getSubscriptions(SearchOptions opt) {
         List<MobileSubscription> result = new ArrayList<>();
         Set<String> subs = new HashSet<>();
-        if(opt.getKeys().isEmpty()) opt.getKeys().add("");
+        List<AggregationOperation> lookupOps;
+        List<AggregationOperation> aggOps;
+
+        if(opt.getKeys().isEmpty()) opt.getKeys().add("msisdn");
         for(String k : opt.getKeys()) {
-            List<AggregationOperation> aggOps = new ArrayList<>();
-            List<AggregationOperation> lookupOps = new ArrayList<>();
+            aggOps = new ArrayList();
 
             MatchOperation filter = getMatchOp(k, opt.getValue(), opt.getType());
-
-            lookupOps = (!k.equals("customeridentificationnumber")) ? getSubscriptionLookupOperations() : getCustomerLookupOperations();
 
             Boolean getAllFields = opt.getFields().isEmpty();
             ProjectionOperation project = new ProjectionOperation()
                     .andExclude("_id")
                     .and("subscriptionnumber").as("msisdn")
                     .andInclude("$CUSTOMER.customeridentificationnumber");
+
             if(!getAllFields) {
                 //if(!opt.getFields().contains("$SUBSCRIPTION.subscriptionnumber")) project = project.and("$SUBSCRIPTION.subscriptionnumber").as("msisdn");
                 for(String field : opt.getFields()) {
@@ -329,35 +345,45 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
                     project = project.and(this.fieldMap.get(field)).as(field);
                 }
             } else {
-                project = (!k.equals("customeridentificationnumber")) ? getSubscriptionProjection() : getCustomerProjection();
+                project = this.keyProject.get(k);
             }
 
             SkipOperation skip = Aggregation.skip(new Long(opt.getPage()*15));
             LimitOperation limit = Aggregation.limit(opt.getLimit());
 
             if(!k.isEmpty()) aggOps.add(filter);
-            aggOps.addAll(lookupOps);
+            aggOps.addAll(this.keyLookup.get(k));
             aggOps.add(limit);
             aggOps.add(skip);
             aggOps.add(project);
 
             Aggregation agg = Aggregation.newAggregation(aggOps);
-
-            System.out.println("Resultset count: " + result.size());
-            if(!k.equals("customeridentificationnumber")){
-                List<MobileSubscription> tmp = operations.aggregate(agg, Subscription.class, MobileSubscription.class).getMappedResults();
-                for( MobileSubscription ms : tmp ) {
-                    if( subs.add( ms.getMsisdn() )) {
-                        result.add( ms );
+            List<MobileSubscription> tmp;
+            switch(k){
+                case "subscriptionnumber":
+                    tmp = operations.aggregate(agg, Subscription.class, MobileSubscription.class).getMappedResults();
+                    for( MobileSubscription ms : tmp ) {
+                        if( subs.add( ms.getMsisdn() )) {
+                            result.add( ms );
+                        }
                     }
-                }
-            } else {
-                List<MobileSubscription> tmp = operations.aggregate(agg, Customer.class, MobileSubscription.class).getMappedResults();
-                for( MobileSubscription ms : tmp ) {
-                    if( subs.add( ms.getMsisdn() )) {
-                        result.add( ms );
+                    break;
+                case "tscid":
+                    tmp = operations.aggregate(agg, "common_customer", MobileSubscription.class).getMappedResults();
+                    for( MobileSubscription ms : tmp ) {
+                        if( subs.add( ms.getMsisdn() )) {
+                            result.add( ms );
+                        }
                     }
-                }
+                    break;
+                case "customeridentificationnumber":
+                    tmp = operations.aggregate(agg, Customer.class, MobileSubscription.class).getMappedResults();
+                    for( MobileSubscription ms : tmp ) {
+                        if( subs.add( ms.getMsisdn() )) {
+                            result.add( ms );
+                        }
+                    }
+                    break;
             }
         }
         System.out.println("Resultset count: " + result.size());
@@ -651,6 +677,76 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
             .and("$MS_STI.invoicetext").arrayElementAt(0).as("multisubscriptiontypedescr")
             .andExclude("_id");
 }
+    private ProjectionOperation getCommonCustomerProjection(){
+    return Aggregation.project()
+            .and("$SUBSCRIPTION.subscriptionid").as("subscriptionid")
+            .and("$SUBSCRIPTION.extracardsubscriptionid").as("extracardsubscriptionid")
+            .andInclude("customeridentificationnumber", "$CUSTOMER.customertype", "$CUSTOMER.customernumber", "tscid")
+            .and("$MEMBER.communityowner").arrayElementAt(0).as("communityowner")
+            .andExpression("\"mobilesubscription:\"").concat("$SUBSCRIPTION.subscriptionnumber").as("c2bcacheuid")
+            .and("$SUBSCRIPTION.subscriptionnumber").as("msisdn")
+            .and("$SUBSCRIPTION.subscriptiontype").as("subscriptiontype")
+            .and("$SUBSCRIPTION.subscriptiontypecategory").as("subscriptiontypecategory")
+            .and("$SUBSCRIPTION.paymentmethod").as("paymentmethod")
+            .and("$SUBSCRIPTION.brandid").as("brandid")
+            .and("$SUBSCRIPTION.branddescription").as("branddescription")
+            .and("$SUBSCRIPTION.activationdate").as("activationdate")
+            .and("$SUBSCRIPTION.trafficstatuscode").as("trafficstatuscode")
+            .and("$SUBSCRIPTION.trafficdescription").as("trafficdescription")
+            .and("$SUBSCRIPTION.subscriptionstatus").as("subscriptionstatus")
+            .and("$SUBSCRIPTION.trafficstatusreason").as("trafficstatusreason")
+            .and("$SUBSCRIPTION.customertargetsegment").as("customertargetsegment")
+            .and("$SUBSCRIPTION.multisubscriptionnumber").as("multisubscriptionnumber")
+            .and("$SUBSCRIPTION.billentityobjid").as("billentityobjid")
+            .and("$SUBSCRIPTION.referencetextonbill").as("referencetextonbill")
+            .and("$SUBSCRIPTION.agreementnumber").as("agreementnumber")
+            .and("$SUBSCRIPTION.address.name").as("sub_name1")
+            .and("$SUBSCRIPTION.address.name2").as("sub_name2")
+            .and("$SUBSCRIPTION.address.name3").as("sub_name3")
+            .and("$SUBSCRIPTION.address.addressrow1").as("sub_addressrow1")
+            .and("$SUBSCRIPTION.address.addressrow2").as("sub_addressrow2")
+            .and("$SUBSCRIPTION.address.addressrow3").as("sub_addressrow3")
+            .and("$SUBSCRIPTION.address.city").as("sub_city")
+            .and("$SUBSCRIPTION.address.zipcode").as("sub_zipcode")
+            .and("$SS.servicecode").as("servicecode")
+            .and("$SS.servicevalue").as("servicevalue")
+            .and("$SSA.attributename").as("attributename")
+            .and("$SSA.attributevalue").as("attributevalue")
+            .and("$SI.invoicetext").as("invoicetext")
+            .and("$SI.allowance").as("allowance")
+            .and("$XS.mobilenumber").arrayElementAt(0).as("xtas_subscriptionnumber")
+            .and("$SUBTYPE.invoicetext").as("offeringname")
+            .and("$BILLGRP.accountnumber").as("accountnumber")
+            .and("$BILLGRP.invoicedeliverymethod").as("invoicedeliverymethod")
+            .and("$BILLGRP.invoicedeliverymethoddescr").as("invoicedeliverymethoddescr")
+            .and("$BILLGRP.billgroupid").as("billingroupid")
+            .and("$BILLGRP.address.name").as("bg_name1")
+            .and("$BILLGRP.address.name2").as("bg_name2")
+            .and("$BILLGRP.address.name3").as("bg_name3")
+            .and("$BILLGRP.address.addressrow1").as("bg_addressrow1")
+            .and("$BILLGRP.address.addressrow2").as("bg_addressrow2")
+            .and("$BILLGRP.address.addressrow3").as("bg_addressrow3")
+            .and("$BILLGRP.address.city").as("bg_city")
+            .and("$BILLGRP.address.zipcode").as("bg_zipcode")
+            .and("$CUSTOMER.address.name").as("cus_name1")
+            .and("$CUSTOMER.address.name2").as("cus_name2")
+            .and("$CUSTOMER.address.name3").as("cus_name3")
+            .and("$CUSTOMER.address.addressrow1").as("cus_addressrow1")
+            .and("$CUSTOMER.address.addressrow2").as("cus_addressrow2")
+            .and("$CUSTOMER.address.addressrow3").as("cus_addressrow3")
+            .and("$CUSTOMER.address.city").as("cus_city")
+            .and("$CUSTOMER.address.zipcode").as("cus_zipcode")
+            .and("$MEMBER.communityowner").arrayElementAt(0).as("communityowner")
+            .and("$OWNER.ownerid").arrayElementAt(0).as("ownerid")
+            .and("$SUBSCRIPTION.retailernumber").as("retailernumber")
+            .and("$SUBSCRIPTION.supervisionlevel").as("supervisionlevel")
+            .and("$SUBSCRIPTION.supervisionstatus").as("supervisionstatus")
+            .and("$SUBSCRIPTION.supervisiondate").as("supervisiondate")
+            .and("$MS.subscriptiontype").arrayElementAt(0).as("multisubscriptiontype")
+            .and("$MS.subscriptiontypecategory").arrayElementAt(0).as("multisubscriptiontypecategory")
+            .and("$MS_STI.invoicetext").arrayElementAt(0).as("multisubscriptiontypedescr")
+            .andExclude("_id");
+}
     private List<AggregationOperation> getSubscriptionLookupOperations(){
 
         List<AggregationOperation> lookupOps = new ArrayList<>();
@@ -758,6 +854,99 @@ public class CSubscriptionRepositoryImpl implements CustomCSubscriptionRepositor
         LookupOperation lookupSubscription = LookupOperation.newLookup()
                 .from("cusin_subscription")
                 .localField("customernumber")
+                .foreignField("customernumber")
+                .as("SUBSCRIPTION");
+        lookupOps.add(lookupSubscription);
+        lookupOps.add(Aggregation.unwind("SUBSCRIPTION"));
+
+        LookupOperation lookupMember = LookupOperation.newLookup()
+                .from("community_member")
+                .localField("$SUBSCRIPTION.subscriptionnumber")
+                .foreignField("memberid")
+                .as("MEMBER");
+        lookupOps.add(lookupMember);
+
+        LookupOperation lookupOwner = LookupOperation.newLookup()
+                .from("community_owner")
+                .localField("$MEMBER.communityid")
+                .foreignField("communityid")
+                .as("OWNER");
+        lookupOps.add(lookupOwner);
+
+        LookupOperation lookupSubtype = LookupOperation.newLookup()
+                .from("subscriptiontypeinformation")
+                .localField("$SUBSCRIPTION.subscriptiontype")
+                .foreignField("subscriptiontypecode")
+                .as("SUBTYPE");
+        lookupOps.add(lookupSubtype);
+        lookupOps.add(Aggregation.unwind("SUBTYPE"));
+
+        LookupOperation lookupBillGrp= LookupOperation.newLookup()
+                .from("billgrp")
+                .localField("$SUBSCRIPTION.billentityobjid")
+                .foreignField("entityobjid")
+                .as("BILLGRP");
+        lookupOps.add(lookupBillGrp);
+        lookupOps.add(Aggregation.unwind("BILLGRP"));
+
+        LookupOperation lookupSS = LookupOperation.newLookup()
+                .from("subscription_service")
+                .localField("$SUBSCRIPTION.subid_and_extracardsubid")
+                .foreignField("subid_and_extracardsubid")
+                .as("SS");
+        lookupOps.add(lookupSS);
+
+        LookupOperation lookupSSA = LookupOperation.newLookup()
+                .from("subscription_service_attr")
+                .localField("$SUBSCRIPTION.subid_and_extracardsubid")
+                .foreignField("subid_and_extracardsubid")
+                .as("SSA");
+        lookupOps.add(lookupSSA);
+
+        LookupOperation lookupMS = LookupOperation.newLookup()
+                .from("subscription")
+                .localField("$OWNER.ownerid")
+                .foreignField("subscriptionnumber")
+                .as("MS");
+        lookupOps.add(lookupMS);
+
+        LookupOperation lookupMS_STI= LookupOperation.newLookup()
+                .from("subscriptiontypeinformation")
+                .localField("$MS.subscriptiontype")
+                .foreignField("subscriptiontypecode")
+                .as("MS_STI");
+        lookupOps.add(lookupMS_STI);
+
+        LookupOperation lookupXS= LookupOperation.newLookup()
+                .from("xtas_subscription")
+                .localField("$SUBSCRIPTION.subscriptionnumber")
+                .foreignField("mobilenumber")
+                .as("XS");
+        lookupOps.add(lookupXS);
+
+        LookupOperation lookupSI= LookupOperation.newLookup()
+                .from("serviceinformation")
+                .localField("$SS.servicecode")
+                .foreignField("servicecodeid")
+                .as("SI");
+        lookupOps.add(lookupSI);
+
+        return lookupOps;
+    }
+    private List<AggregationOperation> getCommonCustomerLookupOperations(){
+
+        List<AggregationOperation> lookupOps = new ArrayList<>();
+
+        LookupOperation lookupCustomer = LookupOperation.newLookup()
+                .from("customer")
+                .localField("cin_pt")
+                .foreignField("cin_type")
+                .as("CUSTOMER");
+        lookupOps.add(lookupCustomer);
+
+        LookupOperation lookupSubscription = LookupOperation.newLookup()
+                .from("cusin_subscription")
+                .localField("$CUSTOMER.customernumber")
                 .foreignField("customernumber")
                 .as("SUBSCRIPTION");
         lookupOps.add(lookupSubscription);

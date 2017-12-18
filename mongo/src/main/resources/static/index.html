@@ -106,7 +106,8 @@ https://github.com/silviomoreto/bootstrap-select/issues/1135
                             <input type="text" class="form-control change-responsive" id="search-field" aria-describedby="searchFieldAddon"  placeholder="">
 
                             <span class="input-group-btn">
-                                <button type="button" id="clear-elastic" class="btn btn-outline-info" onclick="clearField($('#search-field'))">Clear</button>
+                                <button type="button" id="search-btn" class="btn btn-outline-info" >Search</button>
+                                <!--<button type="button" id="clear-elastic" class="btn btn-outline-info" onclick="clearField($('#search-field'))">Clear</button>-->
                            </span>
                         </div>
                     </div>
@@ -134,15 +135,6 @@ https://github.com/silviomoreto/bootstrap-select/issues/1135
                                         <input type="radio" value="agg" name="SEARCH">
                                         Live
                                     </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label for="result-format">Result</label>
-                            <div class="form-group" id="result-format">
-                                <div class="btn-group" data-toggle="buttons" role="group" aria-label="Type group">
-                                    <label class="TYPE btn btn-outline-info active"><input value="stripped" type="radio" name="RESULT" checked="checked">Stripped</label>
-                                    <label class="TYPE btn btn-outline-info"><input type="radio" value="full" name="RESULT">Full</label>
                                 </div>
                             </div>
                         </div>
@@ -185,9 +177,9 @@ https://github.com/silviomoreto/bootstrap-select/issues/1135
                             <label for="pagination">Pagination</label>
                             <div class="form-group" id="pagination">
                                 <div class="btn-group" role="group" aria-label="Nav group">
-                                    <button type="button" id="prev-page" class="btn btn-outline-info" onclick="changePage(-1)" >Prev page</button>
-                                    <button class="btn btn-outline-info" id="pages" disabled> 0 </button>
-                                    <button type="button" id="next-page" class="btn btn-outline-info" onclick="changePage(1)"  >Next page</button>
+                                    <button type="button" id="prev-page" class="btn btn-outline-info" onclick="changePage(-1); $('.change-responsive').trigger('keyup');" >Prev page</button>
+                                    <button class="btn btn-outline-info" id="pages" disabled> 1 </button>
+                                    <button type="button" id="next-page" class="btn btn-outline-info" onclick="changePage(1); $('.change-responsive').trigger('keyup');"  >Next page</button>
                                 </div>
                             </div>
                         </div>
@@ -207,18 +199,23 @@ https://github.com/silviomoreto/bootstrap-select/issues/1135
         <h4 ><code id="query"></code></h4><br>
     </div>
     <div class="row justify-content-md-center" style="text-align: center" id="result">
-            <div class="col-4">
-                <h3 style="text-decoration: underline;">RESULT</h3><br>
-                <div id="keyResult">
+        <div id="busy" style="min-height: 30px;" class="col-12">
 
-                </div>
-            </div>
-            <div class="col-8" >
-                <h3 style="text-decoration: underline;">JSON</h3><br>
-                <div id="fullResult" class="offset-md-2" style="text-align: left">
+        </div>
 
-                </div>
+        <div class="col-4">
+            <h3 style="text-decoration: underline;">RESULT</h3><br>
+            <div id="keyResult">
+
             </div>
+        </div>
+        <div class="col-8" >
+            <h3 style="text-decoration: underline;">JSON</h3><br>
+            <div id="fullResult" class="offset-md-2" style="text-align: left">
+
+            </div>
+        </div>
+
     </div>
 </div>
 </body>

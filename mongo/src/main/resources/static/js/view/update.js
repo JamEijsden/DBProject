@@ -10,17 +10,19 @@ function printSearch(){
 }
 
 function changePage(opt){
-    if(opt == -1 && page == 0){
-        console.log("wat");
+    if(opt == -1 && page == 1){
         return;
     }
+
     if(opt == -1) {
         page--;
+    } else if(opt == 0){
+        page = 1;
     } else {
         page++;
     }
-    console.log("wat?")
-    $(".change-responsive").trigger( "keyup" );
+    $("#pages").html(page);
+
 }
 
 function populateSelectableFields(fields) {
@@ -70,4 +72,13 @@ function showResult(keyword, result){
     $(".select-button").click( function() {
         $(this).hasClass("btn-outline-info") ? $(this).toggleClass('btn-info btn-outline-info') : $(this).toggleClass('btn-outline-info btn-info');
     });
+}
+
+function showBusyGif(){
+    if($( "#busy" ).has( "img" ).length < 1)
+        $("#busy").prepend('<img id="busyGif" src="http://www.bba-reman.com/images/fbloader.gif" />');
+}
+
+function hideBusyGif(){
+    $("#busyGif").remove();
 }

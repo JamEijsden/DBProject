@@ -3,7 +3,7 @@
  */
 function getFieldnames(){
     $.ajax({
-        url: "http://localhost:8080/api/fields",
+        url: url + ":8080/api/fields",
         type: 'GET',
         dataType: 'json', // added data type
         success: function (res) {

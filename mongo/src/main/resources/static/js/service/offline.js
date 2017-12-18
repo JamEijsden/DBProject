@@ -2,7 +2,7 @@
  * Created by Jimmie on 12/15/2017.
  */
 function categorySearch(input){
-    var latestRequest = "http://localhost:8080/api/mobile/search/" + input + "?type=" + searchType + "&page="+page + "&stripped="+ (resultForm == "stripped" ? true : false);
+    var latestRequest = url + ":8080/api/mobile/search/" + input + "?type=" + searchType + "&page="+page + "&stripped="+ (resultForm == "stripped" ? true : false);
     input = input != null ? input : oldVal;
     $.ajax({
         url: latestRequest,
@@ -35,6 +35,7 @@ function categorySearch(input){
 }
 
 function categoryPostSearch(input){
+    showBusyGif();
     input = input != null ? input : oldVal;
     var data = {
         fields : $('.selectpicker').selectpicker('val'),
@@ -42,10 +43,10 @@ function categoryPostSearch(input){
         value: input,
         type: searchType,
         stripped: (resultForm == "stripped" ? true : false),
-        page: 0,
+        page: page-1,
     };
     $.ajax({
-        url: "http://localhost:8080/api/mobile/search/",
+        url: url + ":8080/api/mobile/search/",
         type: 'POST',
         dataType: 'json', // added data type,
         contentType: "application/json; charset=utf-8",
@@ -63,6 +64,7 @@ function categoryPostSearch(input){
             }
             isSearching = false;
             printSearch();
+            hideBusyGif();
             //$("#resTitle").html("Result from " + input);
             //console.log(JSON.parse(res));
         },

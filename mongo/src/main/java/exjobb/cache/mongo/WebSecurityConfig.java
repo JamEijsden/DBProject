@@ -2,6 +2,7 @@ package exjobb.cache.mongo;
 
 import exjobb.cache.mongo.util.CorsFilter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -16,11 +17,12 @@ import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable().authorizeRequests()
+        http.csrf().disable()
+                .authorizeRequests()
+                    .antMatchers("/**").permitAll()
+                .and()
                 //.antMatchers("/controller").permitAll()
                 //.antMatchers(HttpMethod.POST, "/api/token").permitAll()
-                .anyRequest().permitAll()
-                .and()
                 // We filter the controller/login requests
                 //.addFilterBefore(new JWTLoginFilter("/api/token", authenticationManager()),
                  //       UsernamePasswordAuthenticationFilter.class)
@@ -31,12 +33,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilterBefore(new CorsFilter(), ChannelProcessingFilter.class);
     }
 
-   /* @Override
+    @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         // Create a default account
         auth.inMemoryAuthentication()
-                .withUser("jimmie")
-                .password("Katat0nia")
+                .withUser("test")
+                .password("a1s2d3fTEST")
                 .roles("ADMIN");
-    }*/
+    }
 }

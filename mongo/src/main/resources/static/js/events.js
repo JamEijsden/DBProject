@@ -3,21 +3,23 @@
  */
 
 $("#select-fields").change(function(e){
+    changePage(0);
     $(".change-responsive").trigger( "keyup" );
 });
+
+$("#search-btn").click(function(){
+    $(".change-responsive").trigger( "keyup" );
+})
 
 $("input[name='TYPE']").change(function(e){
     searchType = this.value;
-    $(".change-responsive").trigger( "keyup" );
-});
-
-$("input[name='RESULT']").change(function(e){
-    resultForm = this.value;
+    changePage(0);
     $(".change-responsive").trigger( "keyup" );
 });
 
 $("input[name='SEARCH']").change(function(e){
     search = this.value;
+    changePage(0);
     if(search == "agg") {
         $("#agg-opt").show();
     } else {
@@ -26,6 +28,7 @@ $("input[name='SEARCH']").change(function(e){
 });
 
 $("input[name='KEY']").change(function(e){
+    changePage(0);
     if(keys.indexOf(this.value) === -1)
         keys.push(this.value);
     else

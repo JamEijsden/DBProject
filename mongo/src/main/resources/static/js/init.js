@@ -2,6 +2,7 @@
  * Created by Jimmie on 12/15/2017.
  */
 var isSearching = false;
+var url = "http://35.157.192.42";
 var latestInput = "";
 var search = "cat";
 var keys = ["subscriptionnumber"];
@@ -9,7 +10,7 @@ var searchType = "equals";
 var resultForm = "stripped"
 var oldVal= "";
 var oldTrigger;
-var page = 0;
+var page = 1;
 var stream = false;
 
 

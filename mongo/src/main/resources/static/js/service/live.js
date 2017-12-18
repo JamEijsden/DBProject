@@ -3,8 +3,9 @@
  */
 
 function aggSearch(input){
+
     input = input != null ? input : oldVal;
-    var latestRequest = "http://localhost:8080/api/mobile/live/search/" + input + "?type=" + searchType + "&page="+page + "&key="+key + "&stripped="+ (resultForm == "stripped" ? true : false);
+    var latestRequest = url + ":8080/api/mobile/live/search/" + input + "?type=" + searchType + "&page="+page + "&key="+key + "&stripped="+ (resultForm == "stripped" ? true : false);
     $.ajax({
         url: latestRequest,
         type: 'GET',
@@ -13,7 +14,6 @@ function aggSearch(input){
             console.log(latestRequest);
             console.log(input);
             console.log(res);
-            $("#pages").html(page);
             showResult(input, res);
             if(latestInput != "") {
                 var tmp = latestInput;
@@ -22,6 +22,7 @@ function aggSearch(input){
             }
             isSearching = false;
             printSearch();
+
             //$("#resTitle").html("Result from " + input);
             //console.log(JSON.parse(res));
         },
@@ -35,6 +36,7 @@ function aggSearch(input){
     });
 }
 function aggPostSearch(input){
+    showBusyGif();
     input = input != null ? input : oldVal;
     var data = {
         fields : $('.selectpicker').selectpicker('val'),
@@ -42,10 +44,10 @@ function aggPostSearch(input){
         value: input,
         type: searchType,
         stripped: (resultForm == "stripped" ? true : false),
-        page: 0,
+        page: page-1,
     };
     $.ajax({
-        url: "http://localhost:8080/api/mobile/live/search/?stream="+stream,
+        url: url + ":8080/api/mobile/live/search/?stream="+stream,
         type: 'POST',
         dataType: 'json', // added data type,
         contentType: "application/json; charset=utf-8",
@@ -54,7 +56,6 @@ function aggPostSearch(input){
         success: function (res) {
             console.log(data);
             console.log(res);
-            $("#pages").html(page);
             showResult(input, res);
             if(latestInput != "") {
                 var tmp = latestInput;
@@ -62,6 +63,7 @@ function aggPostSearch(input){
                 aggPostSearch(tmp);
             }
             isSearching = false;
+            hideBusyGif();
             printSearch();
             //$("#resTitle").html("Result from " + input);
             //console.log(JSON.parse(res));
